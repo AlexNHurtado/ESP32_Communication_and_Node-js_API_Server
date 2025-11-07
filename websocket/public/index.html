@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESP32 WebSocket Control</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>ESP32 WebSocket Control</h1>
+      <p class="subtitle">Real-time bidirectional communication</p>
+    </header>
+
+    <div class="connection-status">
+      <div class="status-card" id="backendStatus">
+        <span class="status-icon">🔌</span>
+        <div>
+          <div class="status-label">Backend</div>
+          <div class="status-value" id="backendStatusText">Connecting...</div>
+        </div>
+      </div>
+      <div class="status-card" id="esp32Status">
+        <span class="status-icon">📡</span>
+        <div>
+          <div class="status-label">ESP32</div>
+          <div class="status-value" id="esp32StatusText">Unknown</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div class="card">
+        <h2>Device Status</h2>
+        <div class="status-grid">
+          <div class="status-item">
+            <span class="label">LED State:</span>
+            <span class="value" id="ledState">Unknown</span>
+          </div>
+          <div class="status-item">
+            <span class="label">IP Address:</span>
+            <span class="value" id="ipAddress">-</span>
+          </div>
+          <div class="status-item">
+            <span class="label">WiFi SSID:</span>
+            <span class="value" id="wifiSsid">-</span>
+          </div>
+          <div class="status-item">
+            <span class="label">Signal:</span>
+            <span class="value" id="wifiSignal">-</span>
+          </div>
+          <div class="status-item">
+            <span class="label">Uptime:</span>
+            <span class="value" id="uptime">-</span>
+          </div>
+          <div class="status-item">
+            <span class="label">Free Memory:</span>
+            <span class="value" id="freeHeap">-</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>LED Control</h2>
+        <div class="control-buttons">
+          <button class="btn btn-success" onclick="sendCommand('led_on')" id="btnOn">
+            Turn ON
+          </button>
+          <button class="btn btn-danger" onclick="sendCommand('led_off')" id="btnOff">
+            Turn OFF
+          </button>
+          <button class="btn btn-primary" onclick="sendCommand('toggle')" id="btnToggle">
+            Toggle
+          </button>
+          <button class="btn btn-secondary" onclick="sendCommand('status')" id="btnRefresh">
+            Refresh Status
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Activity Log</h2>
+        <div class="log-container" id="logContainer">
+          <div class="log-entry">Waiting for connection...</div>
+        </div>
+        <button class="btn btn-secondary btn-small" onclick="clearLog()">Clear Log</button>
+      </div>
+
+      <div class="card">
+        <h2>Architecture</h2>
+        <div class="architecture">
+          <div class="arch-box">
+            <strong>Browser</strong>
+            <small>WebSocket Client</small>
+          </div>
+          <div class="arch-arrow">⟷</div>
+          <div class="arch-box">
+            <strong>Node.js Backend</strong>
+            <small>WebSocket Proxy</small>
+          </div>
+          <div class="arch-arrow">⟷</div>
+          <div class="arch-box">
+            <strong>ESP32</strong>
+            <small>WebSocket Server</small>
+          </div>
+        </div>
+        <div class="info-box">
+          <strong>Real-time Features:</strong>
+          <ul>
+            <li>Bidirectional communication</li>
+            <li>Instant updates (no polling)</li>
+            <li>Auto-broadcast status every 5 seconds</li>
+            <li>Low latency control</li>
+            <li>Persistent connection</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>WebSocket Protocol</h2>
+        <div class="code-tabs">
+          <button class="tab-btn active" onclick="showTab('commands')">Commands</button>
+          <button class="tab-btn" onclick="showTab('responses')">Responses</button>
+          <button class="tab-btn" onclick="showTab('status')">Status</button>
+        </div>
+        
+        <div class="tab-content active" id="tab-commands">
+          <h3>Send Commands:</h3>
+          <pre><code>// Turn LED on
+{ "command": "led_on" }
+
+// Turn LED off
+{ "command": "led_off" }
+
+// Toggle LED
+{ "command": "toggle" }
+
+// Request status
+{ "command": "status" }</code></pre>
+        </div>
+
+        <div class="tab-content" id="tab-responses">
+          <h3>Command Responses:</h3>
+          <pre><code>{
+  "type": "response",
+  "success": true,
+  "message": "LED ON",
+  "led": true,
+  "timestamp": 123456
+}</code></pre>
+        </div>
+
+        <div class="tab-content" id="tab-status">
+          <h3>Status Broadcast:</h3>
+          <pre><code>{
+  "type": "status",
+  "device": "ESP32",
+  "ip": "192.168.1.100",
+  "ssid": "MyWiFi",
+  "rssi": -45,
+  "led": true,
+  "uptime": 3600,
+  "heap": 295432,
+  "timestamp": 123456
+}</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

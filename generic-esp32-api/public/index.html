@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generic ESP32 API Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .status-value {
+            font-weight: bold;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: #f8f9fa;
+        }
+
+        .status-value.online {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-value.offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .device-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .device-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .device-item h4 {
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .device-info {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .control-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .btn-success { background: linear-gradient(135deg, #28a745, #20c997); }
+        .btn-warning { background: linear-gradient(135deg, #ffc107, #fd7e14); }
+        .btn-info { background: linear-gradient(135deg, #17a2b8, #6f42c1); }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .log-container {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .log-entry {
+            padding: 2px 0;
+        }
+
+        .log-entry.success { color: #68d391; }
+        .log-entry.error { color: #fc8181; }
+        .log-entry.info { color: #63b3ed; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .control-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Generic ESP32 API Dashboard</h1>
+            <p>Monitor and control any ESP32 device through the universal REST API</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- API Status Card -->
+            <div class="card">
+                <h3>📊 API Status</h3>
+                <div class="status-item">
+                    <span class="status-label">Server Status</span>
+                    <span class="status-value" id="serverStatus">Checking...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">MongoDB</span>
+                    <span class="status-value" id="mongoStatus">Checking...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Registered Devices</span>
+                    <span class="status-value" id="deviceCount">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">API Version</span>
+                    <span class="status-value" id="apiVersion">-</span>
+                </div>
+            </div>
+
+            <!-- Statistics Card -->
+            <div class="card">
+                <h3>📈 Statistics</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalLogs">-</div>
+                        <div class="stat-label">Total Logs</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="recentLogs">-</div>
+                        <div class="stat-label">24h Logs</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="uptime">-</div>
+                        <div class="stat-label">Uptime (s)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="memoryUsage">-</div>
+                        <div class="stat-label">Memory (MB)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Device Registration Card -->
+            <div class="card">
+                <h3>📱 Register New Device</h3>
+                <div class="form-group">
+                    <label for="deviceId">Device ID</label>
+                    <input type="text" class="form-control" id="deviceId" placeholder="esp32_001">
+                </div>
+                <div class="form-group">
+                    <label for="deviceIp">IP Address</label>
+                    <input type="text" class="form-control" id="deviceIp" placeholder="192.168.1.100">
+                </div>
+                <div class="form-group">
+                    <label for="devicePort">Port</label>
+                    <input type="number" class="form-control" id="devicePort" value="80">
+                </div>
+                <div class="form-group">
+                    <label for="deviceLocation">Location</label>
+                    <input type="text" class="form-control" id="deviceLocation" placeholder="Kitchen">
+                </div>
+                <button class="btn btn-primary" onclick="registerDevice()">Register Device</button>
+            </div>
+
+            <!-- Device Control Card -->
+            <div class="card">
+                <h3>🎮 Device Control</h3>
+                <div class="form-group">
+                    <label for="targetDevice">Target Device</label>
+                    <select class="form-control" id="targetDevice">
+                        <option value="">Select device...</option>
+                    </select>
+                </div>
+                <div class="control-panel">
+                    <button class="btn btn-success" onclick="sendCommand('turn_led', {state: true})">LED ON</button>
+                    <button class="btn btn-warning" onclick="sendCommand('turn_led', {state: false})">LED OFF</button>
+                    <button class="btn btn-info" onclick="sendCommand('get_sensor_reading', {})">Read Sensor</button>
+                    <button class="btn btn-primary" onclick="sendCustomData()">Custom Data</button>
+                </div>
+            </div>
+
+            <!-- Registered Devices Card -->
+            <div class="card">
+                <h3>📋 Registered Devices</h3>
+                <div class="device-list" id="deviceList">
+                    <p style="text-align: center; color: #666;">No devices registered yet</p>
+                </div>
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-primary" onclick="refreshDevices()">Refresh List</button>
+                </div>
+            </div>
+
+            <!-- Activity Log Card -->
+            <div class="card">
+                <h3>📝 Activity Log</h3>
+                <div class="log-container" id="activityLog">
+                    <div class="log-entry info">Dashboard started - waiting for activity...</div>
+                </div>
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-warning" onclick="clearLog()">Clear Log</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = window.location.origin; // Use same port as dashboard
+        let activityLog = [];
+
+        // Utility Functions
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            activityLog.unshift({ timestamp, message, type });
+            if (activityLog.length > 50) activityLog.pop();
+            updateLogDisplay();
+        }
+
+        function updateLogDisplay() {
+            const logContainer = document.getElementById('activityLog');
+            logContainer.innerHTML = activityLog.map(entry => 
+                `<div class="log-entry ${entry.type}">[${entry.timestamp}] ${entry.message}</div>`
+            ).join('');
+        }
+
+        function clearLog() {
+            activityLog = [];
+            updateLogDisplay();
+            addLog('Activity log cleared');
+        }
+
+        // API Functions
+        async function fetchAPIStatus() {
+            try {
+                addLog('Fetching API status...', 'info');
+                const response = await fetch(`${API_BASE_URL}/`);
+                const data = await response.json();
+                
+                document.getElementById('serverStatus').textContent = 'Online';
+                document.getElementById('serverStatus').className = 'status-value online';
+                document.getElementById('mongoStatus').textContent = data.mongodb.connected ? 'Connected' : 'Disconnected';
+                document.getElementById('mongoStatus').className = `status-value ${data.mongodb.connected ? 'online' : 'offline'}`;
+                document.getElementById('deviceCount').textContent = data.registered_devices.length;
+                document.getElementById('apiVersion').textContent = data.version;
+                
+                addLog('API status updated successfully', 'success');
+                return data;
+            } catch (error) {
+                document.getElementById('serverStatus').textContent = 'Offline';
+                document.getElementById('serverStatus').className = 'status-value offline';
+                document.getElementById('mongoStatus').textContent = 'Unknown';
+                document.getElementById('mongoStatus').className = 'status-value offline';
+                
+                addLog(`Failed to fetch API status: ${error.message}`, 'error');
+                return null;
+            }
+        }
+
+        async function fetchStatistics() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/stats`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('uptime').textContent = Math.round(data.api_stats.uptime_seconds);
+                    document.getElementById('memoryUsage').textContent = Math.round(data.api_stats.memory_usage.heapUsed / 1024 / 1024);
+                    
+                    if (data.mongodb_stats.available) {
+                        document.getElementById('totalLogs').textContent = data.mongodb_stats.total_logs;
+                        document.getElementById('recentLogs').textContent = data.mongodb_stats.recent_logs_24h;
+                    } else {
+                        document.getElementById('totalLogs').textContent = 'N/A';
+                        document.getElementById('recentLogs').textContent = 'N/A';
+                    }
+                    
+                    addLog('Statistics updated', 'success');
+                }
+            } catch (error) {
+                addLog(`Failed to fetch statistics: ${error.message}`, 'error');
+            }
+        }
+
+        async function refreshDevices() {
+            try {
+                addLog('Refreshing device list...', 'info');
+                const response = await fetch(`${API_BASE_URL}/devices`);
+                const data = await response.json();
+                
+                const deviceList = document.getElementById('deviceList');
+                const deviceSelect = document.getElementById('targetDevice');
+                
+                if (data.success && data.devices.length > 0) {
+                    deviceList.innerHTML = data.devices.map(device => `
+                        <div class="device-item">
+                            <h4>${device.device_id}</h4>
+                            <div class="device-info">
+                                <strong>IP:</strong> ${device.ip}:${device.port}<br>
+                                <strong>Last Seen:</strong> ${new Date(device.last_seen).toLocaleString()}<br>
+                                <strong>Status:</strong> ${device.online_duration < 300000 ? 'Online' : 'Offline'}
+                                ${device.device_info && device.device_info.location ? `<br><strong>Location:</strong> ${device.device_info.location}` : ''}
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    // Update device selector
+                    deviceSelect.innerHTML = '<option value="">Select device...</option>' + 
+                        data.devices.map(device => `<option value="${device.device_id}">${device.device_id}</option>`).join('');
+                    
+                    addLog(`Found ${data.devices.length} registered devices`, 'success');
+                } else {
+                    deviceList.innerHTML = '<p style="text-align: center; color: #666;">No devices registered yet</p>';
+                    deviceSelect.innerHTML = '<option value="">No devices available</option>';
+                    addLog('No devices found', 'info');
+                }
+            } catch (error) {
+                addLog(`Failed to refresh devices: ${error.message}`, 'error');
+            }
+        }
+
+        async function registerDevice() {
+            const deviceId = document.getElementById('deviceId').value;
+            const deviceIp = document.getElementById('deviceIp').value;
+            const devicePort = document.getElementById('devicePort').value;
+            const deviceLocation = document.getElementById('deviceLocation').value;
+            
+            if (!deviceId || !deviceIp) {
+                addLog('Device ID and IP are required', 'error');
+                return;
+            }
+            
+            try {
+                addLog(`Registering device ${deviceId}...`, 'info');
+                const response = await fetch(`${API_BASE_URL}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        device_id: deviceId,
+                        ip: deviceIp,
+                        port: parseInt(devicePort) || 80,
+                        device_info: {
+                            location: deviceLocation || 'unknown',
+                            registered_from: 'dashboard'
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addLog(`Device ${deviceId} registered successfully`, 'success');
+                    // Clear form
+                    document.getElementById('deviceId').value = '';
+                    document.getElementById('deviceIp').value = '';
+                    document.getElementById('deviceLocation').value = '';
+                    // Refresh device list
+                    refreshDevices();
+                } else {
+                    addLog(`Failed to register device: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addLog(`Registration failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function sendCommand(command, parameters) {
+            const targetDevice = document.getElementById('targetDevice').value;
+            
+            if (!targetDevice) {
+                addLog('Please select a target device first', 'error');
+                return;
+            }
+            
+            try {
+                addLog(`Sending command "${command}" to ${targetDevice}...`, 'info');
+                const response = await fetch(`${API_BASE_URL}/send/command`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        device_id: targetDevice,
+                        command: command,
+                        parameters: parameters
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addLog(`Command "${command}" sent successfully to ${targetDevice}`, 'success');
+                    if (data.response) {
+                        addLog(`Device response: ${JSON.stringify(data.response)}`, 'info');
+                    }
+                } else {
+                    addLog(`Failed to send command: ${data.details || data.error}`, 'error');
+                }
+            } catch (error) {
+                addLog(`Command failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function sendCustomData() {
+            const targetDevice = document.getElementById('targetDevice').value;
+            
+            if (!targetDevice) {
+                addLog('Please select a target device first', 'error');
+                return;
+            }
+            
+            const customData = {
+                message: 'Hello from Dashboard!',
+                action: 'blink_led',
+                parameters: {
+                    duration: 2000,
+                    count: 3
+                },
+                sent_from: 'web_dashboard'
+            };
+            
+            try {
+                addLog(`Sending custom data to ${targetDevice}...`, 'info');
+                const response = await fetch(`${API_BASE_URL}/send/custom`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        device_id: targetDevice,
+                        data: customData
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addLog(`Custom data sent successfully to ${targetDevice}`, 'success');
+                    addLog(`Custom ID: ${data.custom_id}`, 'info');
+                } else {
+                    addLog(`Failed to send custom data: ${data.details || data.error}`, 'error');
+                }
+            } catch (error) {
+                addLog(`Custom data failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize Dashboard
+        async function initDashboard() {
+            addLog('Dashboard initializing...', 'info');
+            await fetchAPIStatus();
+            await fetchStatistics();
+            await refreshDevices();
+            addLog('Dashboard ready!', 'success');
+            
+            // Set up periodic updates
+            setInterval(async () => {
+                await fetchAPIStatus();
+                await fetchStatistics();
+            }, 30000); // Update every 30 seconds
+            
+            setInterval(refreshDevices, 60000); // Refresh devices every minute
+        }
+
+        // Start dashboard when page loads
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html>

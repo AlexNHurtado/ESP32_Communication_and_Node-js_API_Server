@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESP32 REST API Controller</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>ESP32 REST API Controller</h1>
+      <p class="subtitle">Demonstrating HTML → Backend API → ESP32 Device Communication</p>
+    </header>
+
+    <!-- Architecture Diagram -->
+    <section class="section">
+      <h2>Communication Flow</h2>
+      <div class="architecture">
+        <div class="arch-box browser">
+          <div class="arch-icon">🌐</div>
+          <div class="arch-title">Browser</div>
+          <div class="arch-desc">HTML/CSS/JavaScript</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box backend">
+          <div class="arch-icon">⚙️</div>
+          <div class="arch-title">Backend API</div>
+          <div class="arch-desc">Node.js/Express</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box device">
+          <div class="arch-icon">📡</div>
+          <div class="arch-title">ESP32</div>
+          <div class="arch-desc">Microcontroller</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- System Status -->
+    <section class="section">
+      <h2>System Status</h2>
+      <div class="status-grid">
+        <div class="status-card">
+          <div class="status-label">Backend API</div>
+          <div class="status-value" id="backendStatus">Checking...</div>
+        </div>
+        <div class="status-card">
+          <div class="status-label">ESP32 Device</div>
+          <div class="status-value" id="esp32Status">Checking...</div>
+        </div>
+        <div class="status-card">
+          <div class="status-label">LED State</div>
+          <div class="status-value" id="ledStatus">Unknown</div>
+        </div>
+        <div class="status-card">
+          <div class="status-label">WiFi Signal</div>
+          <div class="status-value" id="wifiSignal">-</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LED Control -->
+    <section class="section">
+      <h2>LED Control Panel</h2>
+      <div class="control-panel">
+        <button class="btn btn-on" onclick="controlLED('on')">
+          <span class="btn-icon">💡</span>
+          Turn LED ON
+        </button>
+        <button class="btn btn-off" onclick="controlLED('off')">
+          <span class="btn-icon">⚫</span>
+          Turn LED OFF
+        </button>
+        <button class="btn btn-toggle" onclick="controlLED('toggle')">
+          <span class="btn-icon">🔄</span>
+          Toggle LED
+        </button>
+        <button class="btn btn-status" onclick="getStatus()">
+          <span class="btn-icon">📊</span>
+          Refresh Status
+        </button>
+        <button class="btn btn-save" onclick="saveToMongoDB()">
+          <span class="btn-icon">💾</span>
+          Save to MongoDB
+        </button>
+      </div>
+    </section>
+
+    <!-- REST API Examples -->
+    <section class="section">
+      <h2>REST API Examples</h2>
+      <div class="api-examples">
+        <div class="api-card">
+          <div class="api-header">
+            <span class="method get">GET</span>
+            <code>/api/status</code>
+          </div>
+          <p class="api-desc">Get device status and information</p>
+          <button class="btn btn-sm" onclick="testAPI('GET', '/api/status')">Test GET</button>
+        </div>
+        
+        <div class="api-card">
+          <span class="method post">POST</span>
+          <code>/api/led/on</code>
+          <p class="api-desc">Turn LED on via POST request</p>
+          <button class="btn btn-sm" onclick="testAPI('POST', '/api/led/on')">Test POST</button>
+        </div>
+        
+        <div class="api-card">
+          <span class="method post">POST</span>
+          <code>/api/led/control</code>
+          <p class="api-desc">Control LED with JSON body: <code>{"state": true}</code></p>
+          <button class="btn btn-sm" onclick="testAPI('POST', '/api/led/control', {state: true})">Test JSON POST</button>
+        </div>
+        
+        <div class="api-card">
+          <span class="method get">GET</span>
+          <code>/api/health</code>
+          <p class="api-desc">Check backend and ESP32 connectivity</p>
+          <button class="btn btn-sm" onclick="testAPI('GET', '/api/health')">Test Health</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- API Response Display -->
+    <section class="section">
+      <h2>API Response</h2>
+      <div id="responseContainer" class="response-container">
+        <div class="response-header">
+          <span id="responseMethod" class="method">-</span>
+          <span id="responseUrl">-</span>
+          <span id="responseStatus" class="status-badge">-</span>
+        </div>
+        <pre id="responseBody" class="response-body">Click any button to see the API response...</pre>
+      </div>
+    </section>
+
+    <!-- Code Examples -->
+    <section class="section">
+      <h2>Code Examples</h2>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('javascript')">JavaScript</button>
+        <button class="tab-btn" onclick="showTab('curl')">cURL</button>
+        <button class="tab-btn" onclick="showTab('python')">Python</button>
+      </div>
+      
+      <div id="javascript" class="tab-content active">
+        <pre><code>// JavaScript Fetch API Example
+async function turnLedOn() {
+  const response = await fetch('/api/led/on', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+  const data = await response.json();
+  console.log(data);
+}
+
+// With JSON body
+async function controlLed(state) {
+  const response = await fetch('/api/led/control', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ state: state })
+  });
+  const data = await response.json();
+  console.log(data);
+}</code></pre>
+      </div>
+      
+      <div id="curl" class="tab-content">
+        <pre><code># Turn LED ON
+curl -X POST http://localhost:3000/api/led/on
+
+# Turn LED OFF
+curl -X POST http://localhost:3000/api/led/off
+
+# Control with JSON
+curl -X POST http://localhost:3000/api/led/control \
+  -H "Content-Type: application/json" \
+  -d '{"state": true}'
+
+# Get status
+curl http://localhost:3000/api/status</code></pre>
+      </div>
+      
+      <div id="python" class="tab-content">
+        <pre><code>import requests
+
+# Turn LED ON
+response = requests.post('http://localhost:3000/api/led/on')
+print(response.json())
+
+# Control with JSON
+response = requests.post('http://localhost:3000/api/led/control',
+                        json={'state': True})
+print(response.json())
+
+# Get status
+response = requests.get('http://localhost:3000/api/status')
+print(response.json())</code></pre>
+      </div>
+    </section>
+
+    <!-- Activity Log -->
+    <section class="section">
+      <h2>Activity Log</h2>
+      <div id="activityLog" class="activity-log"></div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

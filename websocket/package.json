@@ -1,0 +1,27 @@
+{
+  "name": "esp32-websocket-controller",
+  "version": "1.0.0",
+  "description": "WebSocket-based ESP32 LED controller with real-time bidirectional communication",
+  "main": "websocket-controller.js",
+  "scripts": {
+    "start": "node websocket-controller.js",
+    "dev": "nodemon websocket-controller.js"
+  },
+  "keywords": [
+    "esp32",
+    "websocket",
+    "iot",
+    "real-time",
+    "led-control"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "ws": "^8.13.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

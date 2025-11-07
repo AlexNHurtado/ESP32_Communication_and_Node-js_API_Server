@@ -1,0 +1,4 @@
+# ESP32 MQTT Client Python Dependencies
+# Install with: pip install -r requirements.txt
+
+paho-mqtt>=1.6.0

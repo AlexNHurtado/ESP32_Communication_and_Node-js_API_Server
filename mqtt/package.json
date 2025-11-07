@@ -1,0 +1,26 @@
+{
+  "name": "esp32-mqtt-client",
+  "version": "1.0.0",
+  "description": "MQTT test client for ESP32 communication",
+  "main": "clients/mqtt-test-client.js",
+  "scripts": {
+    "start": "node clients/mqtt-test-client.js",
+    "test": "node clients/mqtt-test-client.js",
+    "python": "python clients/mqtt-test-client.py"
+  },
+  "keywords": [
+    "esp32",
+    "mqtt", 
+    "iot",
+    "microcontroller",
+    "arduino"
+  ],
+  "author": "ESP32 MQTT Demo",
+  "license": "MIT",
+  "dependencies": {
+    "mqtt": "^5.3.4"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
