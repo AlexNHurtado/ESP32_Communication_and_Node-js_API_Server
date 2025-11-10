@@ -1,37 +1,66 @@
-# ESP32 Bluetooth Communication Demo
+# ESP32 Bluetooth Communication Examples
 
-A simple demonstration of ESP32 Bluetooth Classic communication for controlling an LED and getting device status.
+Complete examples for **both Bluetooth Classic and BLE (Bluetooth Low Energy)** communication with ESP32, including LED control, sensor data, and device status monitoring.
 
-## 📱 What is Bluetooth?
+## � Files Overview
 
-Bluetooth is a short-range wireless communication technology designed for connecting devices within a personal area network (PAN). Unlike WiFi which requires internet infrastructure, Bluetooth creates direct device-to-device connections.
+| File | Type | Description |
+|------|------|-------------|
+| `ESP32_Bluetooth_Simple.cpp` | **Classic** | Bluetooth Classic server with LED control |
+| `ESP32_BLE_Server.ino` | **BLE** | BLE server with three characteristics |
+| `ESP32_BLE_Client.ino` | **BLE** | BLE client for testing the server |
+| `BLE_vs_Classic_Guide.md` | **Guide** | Complete comparison and migration guide |
+| `DISCOVERABILITY_FIX.md` | **Fix** | Solution for discoverability issues |
 
-### Bluetooth vs Other Communication Methods:
+## 🔷 BLE vs Bluetooth Classic
 
-| Aspect | Bluetooth Classic | WiFi | BLE (Low Energy) |
-|--------|-------------------|------|------------------|
-| Range | 10-30 meters | 50-100 meters | 10-50 meters |
-| Power Usage | Medium | High | Very Low |
-| Data Rate | 1-3 Mbps | 150+ Mbps | 125 Kbps - 2 Mbps |
-| Connection | Point-to-point | Network-based | Point-to-point |
-| Pairing | Required | Not required | Optional |
-| Use Case | Audio, data transfer | Internet access | IoT sensors |
+### **NEW: BLE Server Available!** 🎉
+
+| Feature | **Bluetooth Classic** | **BLE (Bluetooth Low Energy)** |
+|---------|----------------------|--------------------------------|
+| **Power** | 100-200mA active | 1-50mA active ⚡ |
+| **Battery Life** | Hours to days | Months to years 🔋 |
+| **Range** | ~10 meters | ~10-100+ meters 📡 |
+| **Connection** | ~6 seconds | ~0.5 seconds ⚡ |
+| **Mobile Apps** | Limited iOS support | Full iOS/Android support 📱 |
+| **Web Support** | None | Web Bluetooth API 🌐 |
+| **Complexity** | Simple serial | Characteristic-based |
+| **Best For** | Audio, file transfer | IoT sensors, wearables |
+
+### **🎯 Recommendation:**
+- **Use BLE** for new projects, mobile apps, battery devices
+- **Use Classic** for audio streaming, legacy compatibility
 
 ## 🚀 Quick Start
 
-### 1. ESP32 Setup
+### 🔷 Option 1: BLE Server (Recommended)
 
 #### Requirements:
-- ESP32 development board (with Bluetooth support)
-- Arduino IDE with ESP32 board support
-- Built-in LED (GPIO 2)
+- ESP32 development board
+- Arduino IDE with ESP32 board support  
+- BLE scanner app (nRF Connect, LightBlue)
 
 #### Steps:
-1. Open `ESP32_Bluetooth_Simple.cpp` in Arduino IDE
-2. Select your ESP32 board and port
-3. Upload the code
-4. Open Serial Monitor (115200 baud)
-5. Note the Bluetooth device name: ESP32_BT_Server
+1. Open `ESP32_BLE_Server.ino` in Arduino IDE
+2. Upload to ESP32
+3. Open Serial Monitor (115200 baud)
+4. Install **nRF Connect** app on your phone
+5. Scan for "ESP32_BLE_Server"
+6. Connect and explore characteristics!
+
+### 🔵 Option 2: Bluetooth Classic (Legacy)
+
+#### Requirements:
+- ESP32 development board
+- Arduino IDE with ESP32 board support
+- Bluetooth terminal app
+
+#### Steps:
+1. Open `ESP32_Bluetooth_Simple.cpp` in Arduino IDE  
+2. Upload to ESP32
+3. Open Serial Monitor (115200 baud)
+4. Pair device from phone Bluetooth settings
+5. Use Bluetooth terminal app to connect
 
 ### 2. Connect from Your Device
 

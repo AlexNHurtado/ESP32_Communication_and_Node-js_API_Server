@@ -1,4 +1,7 @@
 #include "BluetoothSerial.h"
+#include "esp_bt_main.h"
+#include "esp_bt_device.h"
+#include "esp_gap_bt_api.h"
 
 // Check if Bluetooth is available
 #if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
@@ -18,6 +21,36 @@ BluetoothSerial SerialBT;
 bool ledState = false;
 bool bluetoothConnected = false;
 String deviceName = "";
+unsigned long lastDiscoverabilityCheck = 0;
+const unsigned long DISCOVERABILITY_INTERVAL = 30000; // Check every 30 seconds
+
+/**
+ * @brief Ensure Bluetooth remains discoverable
+ */
+void maintainDiscoverability() {
+  unsigned long currentTime = millis();
+  
+  if (currentTime - lastDiscoverabilityCheck > DISCOVERABILITY_INTERVAL) {
+    // Re-enable discoverability periodically
+    esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
+    Serial.println("Refreshed Bluetooth discoverability");
+    lastDiscoverabilityCheck = currentTime;
+  }
+}
+
+/**
+ * @brief Get Bluetooth MAC address as string
+ */
+String getBluetoothMAC() {
+  uint8_t mac[6];
+  SerialBT.getBtAddress(mac);
+  
+  char macStr[18];
+  sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", 
+          mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  
+  return String(macStr);
+}
 
 /**
  * @brief Control LED state
@@ -47,9 +80,21 @@ void bluetoothCallback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param) {
     case ESP_SPP_CLOSE_EVT:
       Serial.println("Bluetooth client disconnected");
       bluetoothConnected = false;
+      // Re-enable discoverability after disconnection
+      Serial.println("Re-enabling discoverability...");
+      esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
+      break;
+      
+    case ESP_SPP_START_EVT:
+      Serial.println("Bluetooth SPP server started");
+      break;
+      
+    case ESP_SPP_INIT_EVT:
+      Serial.println("Bluetooth SPP initialized");
       break;
       
     default:
+      Serial.printf("Bluetooth event: %d\n", event);
       break;
   }
 }
@@ -75,7 +120,7 @@ void processBluetoothCommand(String command) {
     SerialBT.println("=== Device Status ===");
     SerialBT.println("Device: ESP32");
     SerialBT.println("Bluetooth Name: " + String(BT_DEVICE_NAME));
-    SerialBT.println("Bluetooth MAC: " + String(SerialBT.getBtAddress()));
+    SerialBT.println("Bluetooth MAC: " + getBluetoothMAC());
     SerialBT.println("LED State: " + String(ledState ? "ON" : "OFF"));
     SerialBT.println("Uptime: " + String(millis() / 1000) + " seconds");
     SerialBT.println("Free Heap: " + String(ESP.getFreeHeap()) + " bytes");
@@ -122,16 +167,30 @@ void setup() {
     }
   }
   
+  // Enable discoverability and connectability
+  SerialBT.enableSSP();  // Enable Secure Simple Pairing
+  
+  // Set device as discoverable and connectable
+  esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
+  
   Serial.println("Bluetooth initialized successfully!");
   Serial.println();
   Serial.println("=== Device Information ===");
   Serial.println("Bluetooth Name: " + String(BT_DEVICE_NAME));
-  Serial.println("Bluetooth MAC: " + String(SerialBT.getBtAddress()));
+  Serial.println("Bluetooth MAC: " + getBluetoothMAC());
   Serial.println("Device discoverable as: " + String(BT_DEVICE_NAME));
+  Serial.println("Discoverability: ENABLED (Continuous)");
   Serial.println("==========================");
   Serial.println();
-  Serial.println("Waiting for Bluetooth connections...");
-  Serial.println("Connect from your phone/computer and send commands!");
+  Serial.println("🔍 Device is now DISCOVERABLE and ready for connections!");
+  Serial.println("📱 To connect:");
+  Serial.println("   1. Open Bluetooth settings on your phone/computer");
+  Serial.println("   2. Scan for new devices");
+  Serial.println("   3. Look for '" + String(BT_DEVICE_NAME) + "'");
+  Serial.println("   4. Pair and connect");
+  Serial.println("   5. Send commands like 'led on', 'status', 'help'");
+  Serial.println();
+  Serial.println("💡 Tip: Device stays discoverable continuously!");
   Serial.println();
   
   // Initial status
@@ -139,6 +198,9 @@ void setup() {
 }
 
 void loop() {
+  // Maintain Bluetooth discoverability
+  maintainDiscoverability();
+  
   // Check for incoming Bluetooth data
   if (SerialBT.available()) {
     String command = SerialBT.readString();
